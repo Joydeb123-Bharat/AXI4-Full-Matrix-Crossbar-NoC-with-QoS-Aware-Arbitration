@@ -50,13 +50,7 @@ module slave_aw_egress_dwrr #(
     logic [1:0]         current_master_r;
     logic [8:0]         transaction_cost;
 
-    // Grant-hold registers. m_awvalid is only ever 1 when grant_pending_r is 1.
-    // Driving m_awvalid combinationally from grant_eligible causes a timing race:
-    // on the same cycle grant_eligible first goes true, the slave may already have
-    // AWREADY high, making the handshake complete before grant_pending_r is even set.
-    // The latch then never clears because it sees m_awready on a cycle after the
-    // slave has already deasserted AWREADY. One extra cycle of latency here
-    // eliminates the race entirely.
+    // Grant-hold registers
     logic                  grant_pending_r;
     logic [1:0]            grant_master_r;
     logic [ID_WIDTH+2-1:0] grant_awid_r;
@@ -64,9 +58,6 @@ module slave_aw_egress_dwrr #(
     logic [7:0]            grant_awlen_r;
 
     // grant_eligible: master is requesting, has sufficient credit, and FIFO has room.
-    // Shared between both always_ff blocks so they always agree on whether a grant is
-    // being issued this cycle - prevents two parallel always_ff blocks from firing
-    // conflicting decisions on the same posedge.
     logic grant_eligible;
     assign grant_eligible = s_awvalid_bus[current_master_r] &&
                             !fifo_full &&
@@ -130,10 +121,7 @@ module slave_aw_egress_dwrr #(
             end
         end
     end
-
-    // Output mux: m_awvalid is ONLY 1 when grant_pending_r=1 (never combinational).
-    // When not pending, drive the payload signals anyway so transaction_cost stays
-    // accurate for Condition B in the scheduler above.
+    
     always_comb begin
         m_awid        = '0;
         m_awaddr      = '0;
