@@ -309,6 +309,3 @@ transaction count, and interpret a hang if one occurs.
 
 ---
 
-## License
-
-MIT — add `LICENSE` file before making the repository public.
